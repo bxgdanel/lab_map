@@ -1,4 +1,6 @@
-import org.w3c.dom.Entity;
+package Repo;
+
+import Domain.User;
 
 public class UserParser implements EntityParser<User> {
 

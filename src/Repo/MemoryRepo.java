@@ -1,3 +1,9 @@
+package Repo;
+
+import Domain.Entity;
+import Exceptions.RepoException;
+import Validari.Validator;
+
 import java.util.HashMap;
 
 public class MemoryRepo<E extends Entity> implements Repo<E> {
@@ -28,6 +34,9 @@ public class MemoryRepo<E extends Entity> implements Repo<E> {
         throw new RepoException("Datele invalide");
     }
     public E remove(Integer id){
-       return mem.remove(id);
+        E obj = mem.remove(id);
+        if(obj == null)
+            throw new RepoException("Id-ul nu exista");
+        return obj;
     }
 }

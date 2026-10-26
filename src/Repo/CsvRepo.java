@@ -1,14 +1,20 @@
+package Repo;
+
+import Domain.Entity;
+import Exceptions.RepoException;
+import Validari.Validator;
+import Repo.EntityParser;
 import java.io.*;
 import java.util.HashMap;
 
 public class CsvRepo<E extends Entity> implements Repo<E>{
     private final String filename;
     private final EntityParser<E> parser;
-    Validator valid;
+    Validator<E> valid;
     HashMap<Integer,E> mem;
     private int highestKey;
 
-    public CsvRepo(String filename, EntityParser<E> parser, Validator valid) {
+    public CsvRepo(String filename, EntityParser<E> parser, Validator<E> valid) {
         this.filename = filename;
         this.parser = parser;
         mem = new HashMap<Integer, E>();
@@ -16,6 +22,10 @@ public class CsvRepo<E extends Entity> implements Repo<E>{
         this.valid = valid;
         loadFile();
     }
+
+    /**
+     * Functie helper care incarca in memorie datele din fisier
+     */
     public void loadFile(){
         try(BufferedReader br = new BufferedReader(new FileReader(filename))){
             String line;
@@ -24,14 +34,21 @@ public class CsvRepo<E extends Entity> implements Repo<E>{
                 {
                     E entity = parser.createEntity(line);
                     mem.put(entity.getId(),entity);
+                    if (entity.getId() >= highestKey) {
+                        highestKey = entity.getId() + 1;
+                    }
                 }
             }
         }catch(IOException e){
             throw new RepoException();
         }
     }
+
+    /**
+     * Functie helper care scrie in fisier datele din memorie
+     */
     private void writeToFile() {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename, true))) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename))) {
             for(var entity:mem.values()) {
                 bw.write(parser.toCsv(entity));
                 bw.newLine();
@@ -62,6 +79,8 @@ public class CsvRepo<E extends Entity> implements Repo<E>{
     }
     public E remove(Integer id){
         E obj =  mem.remove(id);
+        if(obj == null)
+            throw new RepoException("Id-ul nu exista");
         writeToFile();
         return obj;
     }
