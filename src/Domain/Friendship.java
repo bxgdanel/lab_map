@@ -1,11 +1,23 @@
 package Domain;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 public class Friendship extends Entity{
     private int uid1;
 
     private int uid2;
+    private LocalDateTime data;
+    public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+
+    public Friendship(LocalDateTime data, int uid1, int uid2) {
+        this.data = data;
+        this.uid2 = uid2;
+        this.uid1 = uid1;
+    }
+
     /**
      * Getter pentru id-ul primului utilizator
      * @return int
@@ -39,6 +51,7 @@ public class Friendship extends Entity{
     public Friendship(int uid1, int uid2) {
         this.uid1 = uid1;
         this.uid2 = uid2;
+        data = LocalDateTime.now();
     }
 
     @Override
@@ -57,5 +70,23 @@ public class Friendship extends Entity{
     @Override
     public int hashCode() {
         return Objects.hash(Math.min(uid1, uid2), Math.max(uid1, uid2));
+    }
+    public static Friendship createEntity(String line, String separator) {
+        String[] el = line.split(Pattern.quote(separator));
+        Friendship fr = new Friendship(Integer.parseInt(el[1]),Integer.parseInt(el[2]));
+        fr.setId(Integer.parseInt(el[0]));
+        return fr;
+    }
+    @Override
+    public String toSave(String separator) {
+        return this.getId() + separator + this.getUid1() + separator + this.getUid2();
+    }
+
+    public LocalDateTime getData() {
+        return data;
+    }
+
+    public void setData(LocalDateTime data) {
+        this.data = data;
     }
 }

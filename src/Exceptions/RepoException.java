@@ -5,4 +5,8 @@ public class RepoException extends RuntimeException{
         super(message);
     }
     public RepoException(){}
+
+    public RepoException(String message, Throwable cause) {
+        super(message, cause);
+    }
 }

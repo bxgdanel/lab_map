@@ -5,7 +5,13 @@ import Domain.User;
 import Exceptions.RepoException;
 import Repo.Repo;
 
+import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static Repo.CriteriiUtilizator.hasFriends;
+import static Repo.CriteriiUtilizator.hasLastName;
 
 public class Service {
     Repo<User> userRepo;
@@ -36,66 +42,63 @@ public class Service {
         Friendship aux = new Friendship(uid1,uid2);
         if(friendshipRepo.getAll().containsValue(aux))
             throw new RepoException("Prietenia exista deja!");
-        return friendshipRepo.add(new Friendship(uid1,uid2));
+        return friendshipRepo.add(new Friendship(LocalDateTime.now(),uid1,uid2));
     }
 
     /**
      * Sterge un utilizator si prieteniile asociate lui
      */
     public User RemoveUser(Integer id){
-        ArrayList<Integer> idDeSters = new ArrayList<>();
-        for(var f:friendshipRepo.getAll().values())
-            if(f.getUid1() == id || f.getUid2() == id)
-                idDeSters.add(f.getId());
-        for(var i:idDeSters)
-            friendshipRepo.remove(i);
+        List<Friendship> toDelete = friendshipRepo.getAll().values().stream().filter(friendship ->
+                friendship.getUid1() == id ||
+                friendship.getUid2() == id).collect(Collectors.toList());
+        toDelete.forEach(f->friendshipRepo.remove(f.getId()));
         return userRepo.remove(id);
+    }
+    public List<User> getFriendsOfUser(int uid){
+        userRepo.getById(uid);
+        return friendshipRepo.getAll().values().stream().filter(f-> f.getUid1() == uid || f.getUid2()==uid)
+                .map(f-> f.getUid1() == uid ? f.getUid2() : f.getUid1())
+                .map(userRepo::getById)
+                .collect(Collectors.toList());
     }
     /**
      * Construieste lista de adiacenta a grafului retelei.
      */
     private Map<Integer, List<Integer>> buildGraph() {
-        Map<Integer, List<Integer>> adj = new HashMap<>();
-        for (User u : userRepo.getAll().values()) {
-            adj.put(u.getId(), new ArrayList<>());
-        }
-        for (Friendship f : friendshipRepo.getAll().values()) {
-            if (adj.containsKey(f.getUid1()) && adj.containsKey(f.getUid2())) {
-                adj.get(f.getUid1()).add(f.getUid2());
-                adj.get(f.getUid2()).add(f.getUid1());
-            }
-        }
+        Map<Integer, List<Integer>> adj = userRepo.getAll().values().stream().collect(
+                Collectors.toMap(User::getId,u->new ArrayList<>()));
+        friendshipRepo.getAll().values().stream()
+                .filter(f-> adj.containsKey(f.getUid1()) && adj.containsKey(f.getUid2()))
+                .forEach(f->{
+                    adj.get(f.getUid1()).add(f.getUid2());
+                    adj.get(f.getUid2()).add(f.getUid1());
+                });
+
         return adj;
     }
 
     /**
      * DFS pentru determinarea tuturor nodurilor dintr-o componenta conexa.
      */
-    private void dfsComponent(int node, Map<Integer, List<Integer>> adj, Set<Integer> visited, List<Integer> component) {
+    private List<Integer> dfsComponent(int node, Map<Integer, List<Integer>> adj, Set<Integer> visited) {
         visited.add(node);
-        component.add(node);
-        for (int k : adj.get(node)) {
-            if (!visited.contains(k)) {
-                dfsComponent(k, adj, visited, component);
-            }
-        }
+        List<Integer> component = adj.get(node).stream()
+                .filter(n->!visited.contains(n))
+                .flatMap(n->dfsComponent(n,adj,visited).stream())
+                .collect(Collectors.toList());
+        return Stream.concat(Stream.of(node),component.stream())
+                .collect(Collectors.toList());
     }
 
     /**
      * Returneaza toate componentele conexe.
      */
     private List<List<Integer>> getAllCommunities(Map<Integer, List<Integer>> adj) {
-        List<List<Integer>> communities = new ArrayList<>();
         Set<Integer> visited = new HashSet<>();
-
-        for (Integer userId : adj.keySet()) {
-            if (!visited.contains(userId)) {
-                List<Integer> component = new ArrayList<>();
-                dfsComponent(userId, adj, visited, component);
-                communities.add(component);
-            }
-        }
-        return communities;
+       return  adj.keySet().stream().filter(userId -> !visited.contains(userId))
+                .map(userId -> dfsComponent(userId,adj,visited))
+                .collect(Collectors.toList());
     }
 
     /**
@@ -111,17 +114,11 @@ public class Service {
      */
     private int longestPathFrom(int current, Map<Integer, List<Integer>> adj, Set<Integer> visitedInPath) {
         visitedInPath.add(current);
-        int maxDist = 0;
-
-        for (int neighbor : adj.getOrDefault(current, Collections.emptyList())) {
-            if (!visitedInPath.contains(neighbor)) {
-                int dist = 1 + longestPathFrom(neighbor, adj, visitedInPath);
-                if (dist > maxDist) {
-                    maxDist = dist;
-                }
-            }
-        }
-
+        int maxDist = adj.getOrDefault(current,Collections.emptyList()).stream()
+                .filter(v->!visitedInPath.contains(v))
+                .mapToInt(v->1+longestPathFrom(v,adj,visitedInPath))
+                .max()
+                .orElse(0);
         visitedInPath.remove(current);
         return maxDist;
     }
@@ -133,41 +130,24 @@ public class Service {
         Map<Integer, List<Integer>> adj = buildGraph();
         List<List<Integer>> communities = getAllCommunities(adj);
 
-        List<Integer> bestCommunityIds = new ArrayList<>();
-        int maxPathOverall = -1;
-
-        for (List<Integer> community : communities) {
-            int maxPathInCommunity = 0;
-            for (int node : community) {
-                int pathLen = longestPathFrom(node, adj, new HashSet<>());
-                if (pathLen > maxPathInCommunity) {
-                    maxPathInCommunity = pathLen;
-                }
-            }
-
-            if (maxPathInCommunity > maxPathOverall) {
-                maxPathOverall = maxPathInCommunity;
-                bestCommunityIds = community;
-            }
-        }
-
-        List<User> result = new ArrayList<>();
-        for (int id : bestCommunityIds) {
-            result.add(userRepo.getById(id));
-        }
-        return result;
+        List<Integer> bestCommunityIds = communities.stream()
+                .max(Comparator.comparingInt(lst ->{
+                   return lst.stream().map(el -> longestPathFrom(el,adj,new HashSet<>()))
+                            .max(Comparator.naturalOrder()).orElse(0);
+                }))
+                .orElse(List.of());
+        return bestCommunityIds.stream().map(userRepo::getById).collect(Collectors.toList());
     }
 
     /**
      *Sterge o prietenie
      */
     public Friendship RemoveFriendship(int uid1, int uid2) {
-    for (Friendship f : friendshipRepo.getAll().values()) {
-        if ((f.getUid1() == uid1 && f.getUid2() == uid2) || (f.getUid1() == uid2 && f.getUid2() == uid1)) {
-            return friendshipRepo.remove(f.getId());
-        }
-    }
-    throw new RepoException("Prietenia dintre acesti utilizatori nu exista!");
+        return friendshipRepo.getAll().values().stream().filter(f -> {return f.getUid1() == uid1 && f.getUid2() == uid2;})
+                     .findFirst()
+             .map(f->friendshipRepo.remove(f.getId()))
+            .orElseThrow(() -> new RepoException("Prietenia dintre acesti utilizatori nu exista!"));
+
 }
     /**
      *Returneaza toti utilizatorii
@@ -181,5 +161,8 @@ public class Service {
      */
     public Collection<Friendship> get_all_friendships(){
         return friendshipRepo.getAll().values();
+    }
+    public Collection<User> get_by_name(String name){
+        return userRepo.findAll(hasLastName(name).and(hasFriends(friendshipRepo)));
     }
 }

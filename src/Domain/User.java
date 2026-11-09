@@ -1,6 +1,7 @@
 package Domain;
 
 import java.util.Objects;
+import java.util.regex.Pattern;
 
 public class User extends Entity {
     private String userName;
@@ -39,6 +40,16 @@ public class User extends Entity {
     @Override
     public int hashCode() {
         return Objects.hash(getId(), userName);
+    }
+    public static User createEntity(String line,String separator) {
+        String[] el = line.split(Pattern.quote(separator));
+        User user = new User(el[1]);
+        user.setId(Integer.parseInt(el[0]));
+        return user;
+    }
+    @Override
+    public String toSave(String separator) {
+        return this.getId() + separator + this.getUserName();
     }
 }
 

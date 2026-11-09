@@ -2,6 +2,7 @@ package Ui;
 
 import Domain.User;
 import Exceptions.RepoException;
+import Exceptions.ValidationException;
 import Service.Service;
 
 import java.util.Scanner;
@@ -23,7 +24,7 @@ public class Ui {
                 6.Printeaza prietenii
                 7.Numar Comunitati
                 8.Cea mai sociabila comunitate
-                
+                9.Filtrare dupa un nume
                 0.Iesire
                 """);
     }
@@ -40,23 +41,32 @@ public class Ui {
 
             try {
                 switch (optiune) {
-                    case "1" -> ui_addUser();
-                    case "2" -> ui_addFriendship();
-                    case "3" -> ui_removeUser();
-                    case "4" -> ui_removeFriendship();
-                    case "5" -> printUsers();
-                    case "6" -> printFriendships();
-                    case "7" -> ui_numarComunitati();
-                    case "8" -> ui_ceaMaiSociabilaComunitate();
-                    default -> System.out.println("Optiune invalida! Incearca din nou.");
+                    case "1" : {ui_addUser();break;}
+                    case "2" : {ui_addFriendship();break;}
+                    case "3" : {ui_removeUser();break;}
+                    case "4" : {ui_removeFriendship();break;}
+                    case "5" : {printUsers();break;}
+                    case "6" : {printFriendships();break;}
+                    case "7" : ui_numarComunitati();break;
+                    case "8" : ui_ceaMaiSociabilaComunitate();break;
+                    case "9" : ui_filtrare_nume();break;
+                    default : System.out.println("Optiune invalida! Incearca din nou.");break;
                 }
             } catch (NumberFormatException e) {
                 System.out.println("Eroare: ID-ul introdus trebuie sa fie un numar intreg!");
             } catch (RepoException e) {
                 System.out.println("Eroare: " + e.getMessage());
             }
+            catch(ValidationException e){
+                System.out.println(e.getMessage());
+            }
         }
         scanner.close();
+    }
+    private void ui_filtrare_nume(){
+        System.out.println("Introduceti numele:");
+        String nume = scanner.nextLine().trim();
+        service.get_by_name(nume).stream().forEach(System.out::println);
     }
     private void ui_addUser(){
         System.out.println("Introduceti numele:");
@@ -81,12 +91,11 @@ public class Ui {
         service.RemoveFriendship(id,id2);
     }
     private void printUsers(){
-        for(var user : service.get_all_users())
-            System.out.println(user);
+        service.get_all_users().stream().forEach(System.out::println);
     }
     private void printFriendships(){
-        for(var user : service.get_all_friendships())
-            System.out.println(user);
+        service.get_all_friendships().stream().forEach(System.out::println);
+
     }
     private void ui_numarComunitati() {
         System.out.println("Numarul de comunitati este: " + service.getNumberOfCommunities());
@@ -98,9 +107,7 @@ public class Ui {
             System.out.println("Nu exista utilizatori in retea.");
         } else {
             System.out.println("Cea mai sociabila comunitate este formata din:");
-            for (User u : community) {
-                System.out.println(u);
-            }
+            community.stream().forEach(System.out::println);
         }
     }
 }

@@ -1,15 +1,16 @@
 package Repo;
 
 import Domain.Entity;
+import Domain.User;
 import Exceptions.RepoException;
 import Validari.Validator;
 
 import java.util.HashMap;
 
 public class MemoryRepo<E extends Entity> implements Repo<E> {
-    HashMap<Integer,E> mem;
-    private int highestKey;
-    private Validator valid;
+    protected HashMap<Integer,E> mem;
+    protected int highestKey;
+    protected Validator valid;
     public MemoryRepo(Validator valid) {
         mem = new HashMap<Integer, E>();
         this.valid = valid;
@@ -24,19 +25,32 @@ public class MemoryRepo<E extends Entity> implements Repo<E> {
             return aux;
         throw new RepoException("Nu exista un utilizator cu id ul dat");
     }
+      /**
+     * Pastreaza ID-ul citit, trece prin validator si actualizeaza highestKey.
+     */
+    public E saveExisting(E obj) {
+        if (obj == null) {
+            throw new IllegalArgumentException("Entitatea nu poate fi nula!");
+        }
+        valid.valid(obj);
+        mem.put(obj.getId(), obj);
+        if (obj.getId() >= highestKey) {
+            highestKey = obj.getId() + 1;
+        }
+        return obj;
+    }
     public E add(E obj){
-        if(valid.valid(obj)) {
+        valid.valid(obj);
             obj.setId(highestKey);
             mem.putIfAbsent(highestKey, obj);
             highestKey++;
             return obj;
-        }
-        throw new RepoException("Datele invalide");
     }
     public E remove(Integer id){
         E obj = mem.remove(id);
         if(obj == null)
-            throw new RepoException("Id-ul nu exista");
+            throw new IllegalArgumentException("Id-ul nu exista");
         return obj;
     }
+
 }

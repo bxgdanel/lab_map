@@ -3,6 +3,9 @@ package Repo;
 import Domain.Entity;
 
 import java.util.HashMap;
+import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public interface Repo<E extends Entity> {
 
@@ -32,4 +35,7 @@ public interface Repo<E extends Entity> {
      * @return obiectul eliminat
      */
     public E remove(Integer id);
+    default List<E> findAll(Predicate<E> filter){
+        return getAll().values().stream().filter(filter).collect(Collectors.toList());
+    }
 }

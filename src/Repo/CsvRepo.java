@@ -58,14 +58,12 @@ public class CsvRepo<E extends Entity> implements Repo<E>{
         }
     }
     public E add(E obj){
-        if(valid.valid(obj)){
+        valid.valid(obj);
             obj.setId(highestKey);
             mem.putIfAbsent(highestKey,obj);
             highestKey++;
             writeToFile();
             return obj;
-        }
-        throw new RepoException("Datele invalide");
     }
 
     public HashMap<Integer,E> getAll(){
