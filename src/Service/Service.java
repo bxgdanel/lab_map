@@ -4,6 +4,7 @@ import Domain.Friendship;
 import Domain.User;
 import Exceptions.RepoException;
 import Repo.Repo;
+import Repo.CriteriiUtilizator;
 
 import java.time.LocalDateTime;
 import java.util.*;
@@ -12,6 +13,7 @@ import java.util.stream.Stream;
 
 import static Repo.CriteriiUtilizator.hasFriends;
 import static Repo.CriteriiUtilizator.hasLastName;
+
 
 public class Service {
     Repo<User> userRepo;
@@ -23,7 +25,8 @@ public class Service {
     }
 
     /**
-     * Adauga un utilizator nou
+     * @param username - the username of the user to be added
+     * @return - the added user with the associated id
      */
     public User AddUser(String username){
         User aux = new User(username);
@@ -46,7 +49,8 @@ public class Service {
     }
 
     /**
-     * Sterge un utilizator si prieteniile asociate lui
+     * @param id - id of the user to be deleted
+     * @return - the deleted user
      */
     public User RemoveUser(Integer id){
         List<Friendship> toDelete = friendshipRepo.getAll().values().stream().filter(friendship ->
@@ -55,6 +59,12 @@ public class Service {
         toDelete.forEach(f->friendshipRepo.remove(f.getId()));
         return userRepo.remove(id);
     }
+
+    /**
+     *
+     * @param uid - id of user whose friends to search
+     * @return - a list with all the friends
+     */
     public List<User> getFriendsOfUser(int uid){
         userRepo.getById(uid);
         return friendshipRepo.getAll().values().stream().filter(f-> f.getUid1() == uid || f.getUid2()==uid)
@@ -63,7 +73,7 @@ public class Service {
                 .collect(Collectors.toList());
     }
     /**
-     * Construieste lista de adiacenta a grafului retelei.
+     * @return - adjacency list of the graph
      */
     private Map<Integer, List<Integer>> buildGraph() {
         Map<Integer, List<Integer>> adj = userRepo.getAll().values().stream().collect(
@@ -79,7 +89,10 @@ public class Service {
     }
 
     /**
-     * DFS pentru determinarea tuturor nodurilor dintr-o componenta conexa.
+     * @param node - starting node
+     * @param adj - adjacency list
+     * @param visited - set of visited nodes
+     * @return - list of the nodes in the same connex component
      */
     private List<Integer> dfsComponent(int node, Map<Integer, List<Integer>> adj, Set<Integer> visited) {
         visited.add(node);
@@ -92,7 +105,8 @@ public class Service {
     }
 
     /**
-     * Returneaza toate componentele conexe.
+     * @param adj - adjacency list
+     * @return - a list of all the conex components
      */
     private List<List<Integer>> getAllCommunities(Map<Integer, List<Integer>> adj) {
         Set<Integer> visited = new HashSet<>();
@@ -102,7 +116,7 @@ public class Service {
     }
 
     /**
-     * Returneaza numarul de componente conexe
+     * @return - number of cimmunities
      */
     public int getNumberOfCommunities() {
         Map<Integer, List<Integer>> adj = buildGraph();
@@ -110,7 +124,10 @@ public class Service {
     }
 
     /**
-     * Calculeaza cel mai lung drum simplu care porneste dintr-un nod
+     * @param current - the current node
+     * @param adj - adjacency list
+     * @param visitedInPath - set of visited nodes in the current path
+     * @return - the longest path starting from the current node
      */
     private int longestPathFrom(int current, Map<Integer, List<Integer>> adj, Set<Integer> visitedInPath) {
         visitedInPath.add(current);
@@ -124,7 +141,7 @@ public class Service {
     }
 
     /**
-     * Returneaza cea mai sociabila comunitate .
+     * @return - the most sociable community
      */
     public List<User> getMostSociableCommunity() {
         Map<Integer, List<Integer>> adj = buildGraph();
@@ -140,7 +157,9 @@ public class Service {
     }
 
     /**
-     *Sterge o prietenie
+     * @param uid1 - the id of the first friend in the friendship
+     * @param uid2 - the id of the second friend in the friendship
+     * @return the friendship that was deleted from the repo
      */
     public Friendship RemoveFriendship(int uid1, int uid2) {
         return friendshipRepo.getAll().values().stream().filter(f -> {return f.getUid1() == uid1 && f.getUid2() == uid2;})
@@ -150,19 +169,43 @@ public class Service {
 
 }
     /**
-     *Returneaza toti utilizatorii
+     * @return all the users
      */
     public Collection<User> get_all_users(){
         return userRepo.getAll().values();
     }
 
     /**
-     * Returneaza toate prieteniile
+     *
+     * @return Collection<Friendship> - all friendships
      */
     public Collection<Friendship> get_all_friendships(){
         return friendshipRepo.getAll().values();
     }
+
+    /**
+     *
+     * @param name - to filter by
+     * @return a collection of all the users whose name contains the given string
+     */
     public Collection<User> get_by_name(String name){
         return userRepo.findAll(hasLastName(name).and(hasFriends(friendshipRepo)));
+    }
+
+    /**
+     *
+     * @return a list of all users with a valid username
+     */
+    public List<User> getValidUsers(){
+        return userRepo.findAll(CriteriiUtilizator::hasValidUsername);
+    }
+
+    /**
+     *
+     * @param id - to search by
+     * @return Optional<User> which has the id
+     */
+    public Optional<User> findUser(int id){
+        return Optional.ofNullable(userRepo.getAll().get(id));
     }
 }

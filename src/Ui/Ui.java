@@ -24,7 +24,8 @@ public class Ui {
                 6.Printeaza prietenii
                 7.Numar Comunitati
                 8.Cea mai sociabila comunitate
-                9.Filtrare dupa un nume
+                9.Filtrare dupa un nume care are si prieteni
+                10.Prietenii unui user
                 0.Iesire
                 """);
     }
@@ -50,6 +51,7 @@ public class Ui {
                     case "7" : ui_numarComunitati();break;
                     case "8" : ui_ceaMaiSociabilaComunitate();break;
                     case "9" : ui_filtrare_nume();break;
+                    case "10" : ui_priteni();break;
                     default : System.out.println("Optiune invalida! Incearca din nou.");break;
                 }
             } catch (NumberFormatException e) {
@@ -62,6 +64,11 @@ public class Ui {
             }
         }
         scanner.close();
+    }
+    private void ui_priteni(){
+        System.out.println("Introduceti id:");
+        Integer id = Integer.parseInt(scanner.nextLine().trim());
+        service.getFriendsOfUser(id).forEach(System.out::println);
     }
     private void ui_filtrare_nume(){
         System.out.println("Introduceti numele:");

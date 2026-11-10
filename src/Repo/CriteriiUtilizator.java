@@ -17,4 +17,10 @@ public class CriteriiUtilizator {
                 .collect(Collectors.toSet());
         return u->idWithFriend.contains(u.getId());
     }
+    public static boolean hasValidUsername(User u){
+        return u!=null && !u.getUserName().trim().isEmpty();
+    }
+        public static Predicate<User> withoutFriends(Repo<Friendship> frepo) {
+        return hasFriends(frepo).negate();
+    }
 }
