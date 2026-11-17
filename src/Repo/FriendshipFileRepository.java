@@ -1,12 +1,15 @@
 package Repo;
 
+import Domain.Entity;
 import Domain.Friendship;
+import Domain.Tuple;
 import Validari.Validator;
 
 import java.time.LocalDateTime;
 
-public class FriendshipFileRepository extends AbstractFileRepository<Friendship> {
-    public FriendshipFileRepository(Validator valid, String filename) {
+public class FriendshipFileRepository extends AbstractFileRepository<Tuple<Long,Long>,Friendship>{
+
+public FriendshipFileRepository(Validator valid, String filename) {
         super(valid, filename);
     }
     /**
@@ -17,12 +20,12 @@ public class FriendshipFileRepository extends AbstractFileRepository<Friendship>
     @Override
     protected Friendship createEntity(String line) {
         String[] parts = line.split(";");
-    Integer id1 = Integer.parseInt(parts[0].trim());
-    Integer id2 = Integer.parseInt(parts[1].trim());
+    Long id1 = Long.parseLong(parts[0].trim());
+    Long id2 = Long.parseLong(parts[1].trim());
 
     LocalDateTime date = LocalDateTime.parse(parts[2].trim(), Friendship.FORMATTER);
     Friendship fr = new Friendship(date,id1,id2);
-    fr.setId((highestKey));
+    fr.setId(new Tuple<Long,Long>(id1,id2));
     return fr;
     }
     /**

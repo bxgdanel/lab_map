@@ -2,6 +2,7 @@ package Repo;
 
 import Domain.Entity;
 import Domain.Friendship;
+import Domain.Tuple;
 import Domain.User;
 import Validari.Validator;
 
@@ -18,8 +19,8 @@ public class Repositoryfactory {
     private static final String CONFIG_PATH = "src/main/resources/config.properties";
     private final Properties props = new Properties();
     private final RepositoryType repoType;
-    private final Map<RepositoryType, Function<Validator<User>,Repo<User>>> userRepoMap = new EnumMap<>(RepositoryType.class);
-    private final Map<RepositoryType, Function<Validator<Friendship>,Repo<Friendship>>> friendshipRepoMap = new EnumMap<>(RepositoryType.class);
+    private final Map<RepositoryType, Function<Validator<User>,Repo<Long,User>>> userRepoMap = new EnumMap<>(RepositoryType.class);
+    private final Map<RepositoryType, Function<Validator<Friendship>,Repo<Tuple<Long,Long>,Friendship>>> friendshipRepoMap = new EnumMap<>(RepositoryType.class);
     public Repositoryfactory() {
         try(InputStream input = new FileInputStream(CONFIG_PATH)){
             props.load(input);
@@ -69,11 +70,11 @@ public class Repositoryfactory {
      * @param val - validator
      * @return - Repo<User>
      */
-    public Repo<User> createUserRepository(Validator<User> val){
+    public Repo<Long,User> createUserRepository(Validator<User> val){
         var mapper =userRepoMap.get(repoType);
         if(mapper == null)  throw new IllegalArgumentException("Tip invalid"+repoType);
 
-        Supplier<Repo<User>> supplier = () -> mapper.apply(val);
+        Supplier<Repo<Long,User>> supplier = () -> mapper.apply(val);
         return supplier.get();
     }
     /**
@@ -81,11 +82,11 @@ public class Repositoryfactory {
      * @param val - validator
      * @return - Repo<Friendship>
      */
-    public Repo<Friendship> createFriendshipRepository(Validator<Friendship> val){
+    public Repo<Tuple<Long,Long>,Friendship> createFriendshipRepository(Validator<Friendship> val){
         var mapper =friendshipRepoMap.get(repoType);
         if(mapper == null)  throw new IllegalArgumentException("Tip invalid"+repoType);
 
-        Supplier<Repo<Friendship>> supplier = () -> mapper.apply(val);
+        Supplier<Repo<Tuple<Long,Long>,Friendship>> supplier = () -> mapper.apply(val);
         return supplier.get();
     }
 }

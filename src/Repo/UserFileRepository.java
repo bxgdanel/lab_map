@@ -6,7 +6,7 @@ import Validari.Validator;
 
 import java.util.regex.Pattern;
 
-public class UserFileRepository extends AbstractFileRepository<User>{
+public class UserFileRepository extends AbstractFileRepository<Long,User>{
     public UserFileRepository(Validator valid, String filename) {
         super(valid, filename);
     }
@@ -22,7 +22,7 @@ public class UserFileRepository extends AbstractFileRepository<User>{
         try {
             String[] el = line.split(Pattern.quote(";"));
             User user = new User(el[1]);
-            user.setId(Integer.parseInt(el[0]));
+            user.setId(Long.parseLong(el[0]));
             return user;
         }catch (ArrayIndexOutOfBoundsException | NumberFormatException e){
             throw new IllegalArgumentException("Datele din fisier sunt invalide",e);

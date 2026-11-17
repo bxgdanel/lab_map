@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourcePerFileMappings">
+    <file url="file://$PROJECT_DIR$/src/Repo/FriendshipDbRepository.java" value="fb4e72c0-4d93-408d-8466-09a8607f1c56" />
+    <file url="file://$PROJECT_DIR$/src/Repo/UserDbRepository.java" value="fb4e72c0-4d93-408d-8466-09a8607f1c56" />
+  </component>
+</project>

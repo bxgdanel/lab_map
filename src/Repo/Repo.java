@@ -7,20 +7,20 @@ import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public interface Repo<E extends Entity> {
+public interface Repo<ID,E extends Entity> {
 
     /**
      * Get all
      * @return map-ul cu toate elementele
      */
-    public HashMap<Integer,E> getAll();
+    public HashMap<ID,E> getAll();
 
     /**
      * Returneaza obiectul cu id-ul id
      * @param id
      * @return obiectul cu id-ul dat ca parametru
      */
-    public E getById(Integer id);
+    public E getById(ID id);
 
     /**
      * Functia de add
@@ -34,7 +34,7 @@ public interface Repo<E extends Entity> {
      * @param id
      * @return obiectul eliminat
      */
-    public E remove(Integer id);
+    public E remove(ID id);
     default List<E> findAll(Predicate<E> filter){
         return getAll().values().stream().filter(filter).collect(Collectors.toList());
     }

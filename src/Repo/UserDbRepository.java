@@ -1,11 +1,13 @@
 package Repo;
 
 import Domain.User;
+import Exceptions.RepoException;
 import Validari.Validator;
 
+import java.sql.*;
 import java.util.HashMap;
 
-public class UserDbRepository implements Repo<User> {
+public class UserDbRepository implements Repo<Long,User> {
     private final Validator<User> validator;
     private final String url;
     private final String user;
@@ -16,25 +18,93 @@ public class UserDbRepository implements Repo<User> {
         this.url = url;
         this.user = user;
         this.password = password;
+
     }
 
+    /**
+     *
+     * @return - a hashmap with al the users
+     */
     @Override
-    public HashMap<Integer, User> getAll() {
-       throw new UnsupportedOperationException("Not implemented yet");
+    public HashMap<Long, User> getAll() {
+        HashMap<Long,User> m = new HashMap<>();
+       try(Connection con = DriverManager.getConnection(url,user,password);
+           PreparedStatement ps  = con.prepareStatement("select * from users")){
+           ResultSet rs = ps.executeQuery();
+            while(rs.next()){
+                User u = new User(rs.getString("username"));
+                Long id = rs.getLong("id");
+                u.setId(id);
+                m.put(id,u);
+            }
+       } catch (SQLException e) {
+           throw new RuntimeException(e);
+       }
+       return m;
     }
 
+    /**
+     *
+     * @param id - id of the user to be returned
+     * @return user with the id given as parameter
+     */
     @Override
-    public User getById(Integer id) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    public User getById(Long id) {
+        try(Connection con = DriverManager.getConnection(url,user,password);
+            PreparedStatement ps  = con.prepareStatement("select * from users where id = ?")){
+            ps.setLong(1,id);
+            ResultSet rs = ps.executeQuery();
+            while(rs.next()){
+                User u = new User(rs.getString("username"));
+                Long id_ = rs.getLong("id");
+                u.setId(id_);
+                return u;
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return null;
     }
 
+    /**
+     * adds a user
+     * @param obj - object to be added
+     * @return
+     */
     @Override
     public User add(User obj) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        String sql = "INSERT INTO users(username) VALUES (?)";
+        try (Connection connection = DriverManager.getConnection(url, user, password);
+             PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            ps.setString(1, obj.getUserName());
+            ps.executeUpdate();
+             try (ResultSet keys = ps.getGeneratedKeys()) {
+                keys.next();
+                obj.setId(keys.getLong("id"));
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+    return obj;
     }
 
-    @Override
-    public User remove(Integer id) {
-        throw new UnsupportedOperationException("Not implemented yet");
+    /**
+     * removes the user
+     * @param id - id of the user to be removed
+     * @return
+     */
+        @Override
+    public User remove(Long id) {
+        User found = this.getById(id);
+        if(found == null)
+            return found;
+       try (Connection connection = DriverManager.getConnection(url, user, password);
+             PreparedStatement ps = connection.prepareStatement("DELETE FROM users WHERE id = ?")) {
+            ps.setLong(1, id);
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            throw new RepoException("Eroare la delete: " + e.getMessage(), e);
+        }
+        return found;
     }
 }

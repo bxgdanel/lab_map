@@ -67,7 +67,7 @@ public class Ui {
     }
     private void ui_priteni(){
         System.out.println("Introduceti id:");
-        Integer id = Integer.parseInt(scanner.nextLine().trim());
+        Long id = Long.parseLong(scanner.nextLine().trim());
         service.getFriendsOfUser(id).forEach(System.out::println);
     }
     private void ui_filtrare_nume(){
@@ -82,19 +82,19 @@ public class Ui {
     }
     private void ui_removeUser(){
         System.out.println("Introduceti id-ul:");
-        Integer id = Integer.parseInt(scanner.nextLine().trim());
+        Long id = Long.parseLong(scanner.nextLine().trim());
         service.RemoveUser(id);
     }
     private void ui_addFriendship(){
         System.out.println("Introduceti id-urile pe randuri diferite: ");
-        Integer id1 = Integer.parseInt(scanner.nextLine().trim());
-        Integer id2 = Integer.parseInt(scanner.nextLine().trim());
+        Long id1 = Long.parseLong(scanner.nextLine().trim());
+        Long id2 = Long.parseLong(scanner.nextLine().trim());
         service.AddFriendship(id1,id2);
     }
     private void ui_removeFriendship(){
         System.out.println("Introduceti id-ul dumneavoastra, apoi al prietenului:");
-        Integer id = Integer.parseInt(scanner.nextLine().trim());
-        Integer id2 = Integer.parseInt(scanner.nextLine().trim());
+        Long id = Long.parseLong(scanner.nextLine().trim());
+        Long id2 = Long.parseLong(scanner.nextLine().trim());
         service.RemoveFriendship(id,id2);
     }
     private void printUsers(){

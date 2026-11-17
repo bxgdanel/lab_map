@@ -7,9 +7,9 @@ import Exceptions.ValidationException;
 import Repo.Repo;
 
 public class FriendshipValidator implements Validator<Friendship>{
-    private final Repo<User> userRepo;
+    private final Repo<Long,User> userRepo;
 
-    public FriendshipValidator(Repo<User> userRepo) {
+    public FriendshipValidator(Repo userRepo) {
         this.userRepo = userRepo;
     }
 
@@ -17,7 +17,7 @@ public class FriendshipValidator implements Validator<Friendship>{
     public void valid(Friendship obj) {
         if(obj == null)
             throw new ValidationException("Entitatea friendship nu poate fii nula.");
-        Integer id,id1,id2;
+        Long id,id1,id2;
         id1 = obj.getUid1();
         id2 = obj.getUid2();
         StringBuilder err = new StringBuilder();

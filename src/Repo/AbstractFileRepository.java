@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-public abstract class AbstractFileRepository<E extends Entity> extends MemoryRepo<E>{
+public abstract class AbstractFileRepository<ID,E extends Entity<ID>> extends MemoryRepo<ID,E>{
     String filename;
     public AbstractFileRepository(Validator valid,String filename) {
         this.filename = filename;
@@ -60,7 +60,7 @@ public abstract class AbstractFileRepository<E extends Entity> extends MemoryRep
         return obj1;
     }
     @Override
-    public E remove(Integer id){
+    public E remove(ID id){
         E clone = super.remove(id);
         writeToFile();
         return clone;

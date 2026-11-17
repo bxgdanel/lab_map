@@ -1,0 +1,31 @@
+plugins {
+    java
+}
+
+group = "org.example"
+version = "1.0-SNAPSHOT"
+
+repositories {
+    mavenCentral()
+}
+
+sourceSets {
+    main {
+        java {
+            setSrcDirs(listOf("src"))
+        }
+        resources {
+            setSrcDirs(listOf("src"))
+        }
+    }
+}
+
+dependencies {
+    implementation("org.postgresql:postgresql:42.7.4")
+    testImplementation(platform("org.junit:junit-bom:5.10.0"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+}
+
+tasks.test {
+    useJUnitPlatform()
+}

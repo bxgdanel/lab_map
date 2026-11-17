@@ -2,14 +2,14 @@ package Domain;
 
 import java.util.Objects;
 
-public abstract class Entity {
-    private int id;
+public abstract class Entity<ID> {
+    private ID id;
 
     /**
      * Getter id
      * @return int-id
      */
-    public int getId() {
+    public ID getId() {
         return id;
     }
 
@@ -17,7 +17,7 @@ public abstract class Entity {
      * Setter id
      * @param id -int
      */
-    public void setId(int id) {
+    public void setId(ID id) {
         this.id = id;
     }
     public String toSave(String separator){ return String.valueOf(this.id);}
@@ -26,7 +26,7 @@ public abstract class Entity {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Entity entity = (Entity) o;
-        return id == entity.id;
+        return Objects.equals(id,entity.id);
     }
 
     @Override

@@ -3,7 +3,7 @@ package Domain;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
-public class User extends Entity {
+public class User extends Entity<Long> {
     private String userName;
 
     public User(String userName) {
@@ -44,7 +44,7 @@ public class User extends Entity {
     public static User createEntity(String line,String separator) {
         String[] el = line.split(Pattern.quote(separator));
         User user = new User(el[1]);
-        user.setId(Integer.parseInt(el[0]));
+        user.setId(Long.parseLong(el[0]));
         return user;
     }
     @Override
