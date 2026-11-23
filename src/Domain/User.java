@@ -34,7 +34,7 @@ public class User extends Entity<Long> {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return getId() == user.getId() && Objects.equals(userName, user.userName);
+        return Objects.equals(getId(), user.getId()) && Objects.equals(userName, user.userName);
     }
 
     @Override

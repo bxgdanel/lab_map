@@ -61,7 +61,7 @@ public class UserDbRepository implements Repo<Long,User> {
                 return u;
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new RepoException("Eroare" + e,e);
         }
         return null;
     }
@@ -73,6 +73,7 @@ public class UserDbRepository implements Repo<Long,User> {
      */
     @Override
     public User add(User obj) {
+        validator.valid(obj);
         String sql = "INSERT INTO users(username) VALUES (?)";
         try (Connection connection = DriverManager.getConnection(url, user, password);
              PreparedStatement ps = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
@@ -83,7 +84,7 @@ public class UserDbRepository implements Repo<Long,User> {
                 obj.setId(keys.getLong("id"));
             }
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new RepoException("Eroare" + e,e);
         }
     return obj;
     }

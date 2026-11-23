@@ -8,7 +8,7 @@ public class UserValidator implements Validator<User>{
         if(obj == null)
             throw new ValidationException("Entiatea nu poate fii null.");
         StringBuilder err = new StringBuilder();
-        if(obj.getId()<0)
+        if(obj.getId() != null && obj.getId()<0)
             err.append("Id-ul trebuie sa fie pozitiv");
         if(obj.getUserName().trim().isEmpty())
             err.append("Username-ul nu poate sa fie gol.");

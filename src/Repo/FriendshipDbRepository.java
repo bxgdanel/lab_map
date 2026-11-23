@@ -22,6 +22,10 @@ public class FriendshipDbRepository implements Repo<Tuple<Long,Long>,Friendship>
         this.password = password;
     }
 
+    /**
+     *
+     * @return returns a map with all the items
+     */
     @Override
     public HashMap<Tuple<Long,Long>,Friendship> getAll() {
        HashMap<Tuple<Long,Long>,Friendship> map = new HashMap<>();
@@ -42,6 +46,11 @@ public class FriendshipDbRepository implements Repo<Tuple<Long,Long>,Friendship>
         return map;
     }
 
+    /**
+     *
+     * @param id - id of the friendship to find
+     * @return returns the friendship with the id given as parameter
+     */
     @Override
     public Friendship getById(Tuple<Long,Long> id) {
         try(Connection con = DriverManager.getConnection(url,user,password);
@@ -62,6 +71,11 @@ public class FriendshipDbRepository implements Repo<Tuple<Long,Long>,Friendship>
         return null;
     }
 
+    /**
+     * Adds a friendship
+     * @param obj - object to pe added
+     * @return returns the object that has been added with its assigned id
+     */
     @Override
     public Friendship add(Friendship obj) {
         String sql = "INSERT INTO friendships(id1,id2,friends_from) VALUES (?,?,?)";
@@ -81,6 +95,11 @@ public class FriendshipDbRepository implements Repo<Tuple<Long,Long>,Friendship>
         return obj;
     }
 
+    /**
+     * Removes a friendship
+     * @param id - id of the friendship to be removed
+     * @return the object that has been removed
+     */
     @Override
     public Friendship remove(Tuple<Long,Long> id) {
         Friendship found = this.getById(id);
