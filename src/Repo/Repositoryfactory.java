@@ -4,6 +4,7 @@ import Domain.Entity;
 import Domain.Friendship;
 import Domain.Tuple;
 import Domain.User;
+import Exceptions.RepoException;
 import Validari.Validator;
 
 import java.io.FileInputStream;
@@ -65,6 +66,17 @@ public class Repositoryfactory {
         return value.trim();
     }
 
+    /**
+     * geter for PageSize
+     * @return - integer representing the pagesize set in the config file
+     */
+    public Integer getPageSize(){
+        try{
+            return Integer.parseInt(getRequiredProperty("db.pagesize"));
+        }catch(NumberFormatException e){
+            throw new RepoException("Format la pagesize invalid",e);
+        }
+    }
     /**
      * Function that creates a user repository based on the config
      * @param val - validator

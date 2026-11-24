@@ -4,14 +4,18 @@ import Domain.User;
 import Exceptions.RepoException;
 import Exceptions.ValidationException;
 import Service.Service;
+import paging.Page;
 
 import java.util.Scanner;
+import java.util.function.IntFunction;
 
 public class Ui {
     private final Service service;
     private final Scanner scanner;
-    public Ui(Service s){
+    private final int pageSize;
+    public Ui(Service s,int pageSize){
         this.service = s;
+        this.pageSize = pageSize;
         scanner = new Scanner(System.in);
     }
     private void printMenu(){
@@ -26,6 +30,8 @@ public class Ui {
                 8.Cea mai sociabila comunitate
                 9.Filtrare dupa un nume care are si prieteni
                 10.Prietenii unui user
+                11.Afisare useri cu paging
+                12.Afisare prietenii unui user cu paging
                 0.Iesire
                 """);
     }
@@ -52,6 +58,8 @@ public class Ui {
                     case "8" : ui_ceaMaiSociabilaComunitate();break;
                     case "9" : ui_filtrare_nume();break;
                     case "10" : ui_priteni();break;
+                    case "11" : printUsers_paging();break;
+                    case "12" : ui_priteni_paging();break;
                     default : System.out.println("Optiune invalida! Incearca din nou.");break;
                 }
             } catch (NumberFormatException e) {
@@ -115,6 +123,64 @@ public class Ui {
         } else {
             System.out.println("Cea mai sociabila comunitate este formata din:");
             community.stream().forEach(System.out::println);
+        }
+    }
+    /**
+     * Displays pages of users one at a time, with next / previous navigation.
+     * @param fetch loads the page with the given 0-based number
+     */
+    private void browse(IntFunction<Page<User>> fetch) {
+        int p = 0;
+        while (true) {
+            Page<User> page = fetch.apply(p);
+            int pages = page.totalPages(pageSize);
+            if (p >= pages) {
+                p = pages - 1;
+                continue;
+            }
+            if (page.items().isEmpty())
+                System.out.println("(nimic de afisat)");
+            else
+                page.items().forEach(System.out::println);
+            System.out.println("Pagina " + (p + 1) + " din " + pages);
+
+            System.out.print("[n] urmatoarea / [p] anterioara / [q] iesire: ");
+            switch (scanner.nextLine().trim().toLowerCase()) {
+                case "n" -> {
+                    if (p + 1 < pages) p++;
+                    else System.out.println("Ai ajuns la ultima pagina.");
+                }
+                case "p" -> {
+                    if (p > 0) p--;
+                    else System.out.println("Esti deja la prima pagina.");
+                }
+                case "q" -> { return; }
+                default -> System.out.println("Optiune invalida.");
+            }
+        }
+    }
+
+    /**
+     * Prints users using paging
+     */
+    private void printUsers_paging() {
+        try {
+            browse(p -> service.getUsersPage(p, pageSize));
+        } catch (UnsupportedOperationException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    /**
+     * Prints friends of users using paging
+     */
+    private void ui_priteni_paging() {
+        System.out.println("Introduceti id:");
+        Long id = Long.parseLong(scanner.nextLine().trim());
+        try {
+            browse(p -> service.getFriendsPage(id, p, pageSize));
+        } catch (UnsupportedOperationException e) {
+            System.out.println(e.getMessage());
         }
     }
 }

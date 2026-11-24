@@ -6,7 +6,10 @@ import Domain.User;
 import Exceptions.RepoException;
 import Repo.Repo;
 import Repo.CriteriiUtilizator;
-
+import paging.Page;
+import Repo.PagingRepository;
+import paging.PageRequest;
+import Repo.FriendshipPagingRepo;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -25,6 +28,30 @@ public class Service {
         this.friendshipRepo = friendshipRepo;
     }
 
+    /**
+     * Gets users using paging
+     * @param pageNumber - number of the page to get
+     * @param pageSize - page size
+     * @return - a page containing users
+     */
+    public Page<User> getUsersPage(int pageNumber, int pageSize){
+        if(userRepo instanceof PagingRepository<Long,User> paging)
+            return paging.findAllOnPage(new PageRequest(pageNumber,pageSize));
+        throw new UnsupportedOperationException("Paginarea este disponibila doar pentru repository.type = DATABASE");
+    }
+
+    /**
+     * Gets friends of user using paging
+     * @param uid - id of user to get friends of
+     * @param pageNumber - number of the page to get
+     * @param pageSize - page size
+     * @return - a page containing users
+     */
+    public Page<User> getFriendsPage(Long uid,int pageNumber,int pageSize){
+        if(friendshipRepo instanceof FriendshipPagingRepo paging)
+            return paging.findFriendsOnPage(uid,new PageRequest(pageNumber,pageSize));
+        throw new UnsupportedOperationException("Paginarea este disponibila doar pentru repository.type = DATABASE");
+    }
     /**
      * @param username - the username of the user to be added
      * @return - the added user with the associated id

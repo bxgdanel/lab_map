@@ -20,7 +20,7 @@ void main() {
         Repo<Tuple<Long,Long>,Friendship> friendshipRepo = factory.createFriendshipRepository(friendshipValidator);
 
         Service service = new Service(userRepo, friendshipRepo);
-        Ui ui = new Ui(service);
+        Ui ui = new Ui(service,factory.getPageSize());
         ui.run();
     }catch(ValidationException | IllegalArgumentException e){
         System.err.println("Eroare de configurare sau fisiere corupte: " + e.getMessage());

@@ -5,16 +5,19 @@ import Domain.Tuple;
 import Domain.User;
 import Exceptions.RepoException;
 import Validari.Validator;
+import paging.Page;
+import paging.PageRequest;
 
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
-public class FriendshipDbRepository implements Repo<Tuple<Long,Long>,Friendship> {
+public class FriendshipDbRepository implements FriendshipPagingRepo {
     private final Validator<Friendship> validator;
     private final String url;
     private final String user;
     private final String password;
-
     public FriendshipDbRepository(Validator<Friendship> validator, String url, String user, String password) {
         this.validator = validator;
         this.url = url;
@@ -22,6 +25,44 @@ public class FriendshipDbRepository implements Repo<Tuple<Long,Long>,Friendship>
         this.password = password;
     }
 
+    /***
+     * Finds all friends using paging
+     * @param userId - id of the user whose friends to search for
+     * @param pr - a page request
+     * @return a page containing friends of the user with userId
+     */
+    public Page<User> findFriendsOnPage(Long userId, PageRequest pr){
+        String sql = """
+                SELECT u.id, u.username
+                FROM friendships f
+                JOIN users u on u.id = CASE WHEN f.id1 = ? THEN f.id2 ELSE f.id1 END
+                WHERE f.id1 = ? OR f.id2 = ?
+                ORDER BY u.id LIMIT ? OFFSET ?""";
+        try(Connection con = DriverManager.getConnection(url,user,password)){
+            int total;
+            try(PreparedStatement cnt = con.prepareStatement("select count(*) from friendships where id1 = ? or id2 = ?")){
+                cnt.setLong(1,userId);
+                cnt.setLong(2,userId);
+                try(ResultSet rs = cnt.executeQuery()){rs.next(); total = rs.getInt(1);}
+            }
+        List<User> items = new ArrayList<>();
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setLong(1, userId); ps.setLong(2, userId); ps.setLong(3, userId);
+            ps.setInt(4, pr.pageSize());
+            ps.setInt(5, pr.offset());
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    User u = new User(rs.getString("username"));
+                    u.setId(rs.getLong("id"));
+                    items.add(u);
+                }
+            }
+        }
+        return new Page<>(items, total);
+        }catch (SQLException e) {
+            throw new RepoException("Eroare la paginarea prieteniei: " + e.getMessage(),e);
+        }
+    }
     /**
      *
      * @return returns a map with all the items
@@ -33,13 +74,14 @@ public class FriendshipDbRepository implements Repo<Tuple<Long,Long>,Friendship>
            PreparedStatement ps = con.prepareStatement("select * from friendships");
        ) {
            ResultSet rs = ps.executeQuery();
-           while(rs.next()){
+           while (rs.next()) {
                Long uid1 = rs.getLong("id1");
-               Long uid2 =rs.getLong("id2");
-               Friendship f = new Friendship(rs.getTimestamp("friends_from").toLocalDateTime(),uid1,uid2);
-               Tuple<Long,Long> i = new Tuple<Long,Long>(uid1,uid2);
-               map.put(i,f);
+               Long uid2 = rs.getLong("id2");
+               Friendship f = new Friendship(rs.getTimestamp("friends_from").toLocalDateTime(), uid1, uid2);
+               Tuple<Long, Long> i = new Tuple<Long, Long>(uid1, uid2);
+               map.put(i, f);
            }
+
        } catch (SQLException e) {
            throw new RuntimeException(e);
        }
@@ -115,4 +157,5 @@ public class FriendshipDbRepository implements Repo<Tuple<Long,Long>,Friendship>
         }
         return found;
     }
+
 }
